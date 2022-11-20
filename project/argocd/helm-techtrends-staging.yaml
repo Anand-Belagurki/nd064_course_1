@@ -4,16 +4,16 @@ metadata:
   name: techtrends-staging
   namespace: argocd
 spec:
+  destination:
+#    namespace: default
+    server: https://kubernetes.default.svc
   project: default
   source:
     helm:
       valueFiles:
-        - values-staging.yaml
-      path: project/helm
-      repoURL: https://github.com/anandbelagurki/nd064_course_1
-      targetRevision: HEAD
-  destination:
-    namespace: sandbox
-    server: https://kubernetes.default.svc
+      - values-staging.yaml
+    path: project/helm
+    repoURL: https://github.com/Anand-Belagurki/nd064_course_1
+    targetRevision: HEAD
 
   
