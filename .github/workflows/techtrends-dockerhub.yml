@@ -1,0 +1,13 @@
+name : techtrends - package with Docker
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+   runs-on: ubuntu-latest
+   steps:
+      -
+        name: checkout
+        uses: actions/checkout@v2
