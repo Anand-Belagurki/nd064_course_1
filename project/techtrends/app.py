@@ -1,5 +1,6 @@
+import logging
 import sqlite3
-
+import sys
 from flask import Flask, jsonify, json, render_template, request, url_for, redirect, flash
 from werkzeug.exceptions import abort
 
@@ -18,6 +19,18 @@ def get_post(post_id):
     connection.close()
     return post
 
+def fetch_number_of_posts():
+    connection = get_db_connection()
+    nPosts = connection.execute('SELECT COUNT(*) FROM posts')
+    return nPosts.fetchone()[0]
+
+def fetch_number_of_connections():
+    connection = get_db_connection()
+    nConnections = connection.execute('SELECT * FROM posts')
+    print(nConnections)
+    return nConnections
+
+
 # Define the Flask application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your secret key'
@@ -35,15 +48,40 @@ def index():
 @app.route('/<int:post_id>')
 def post(post_id):
     post = get_post(post_id)
+
     if post is None:
-      return render_template('404.html'), 404
+        app.logger.info('404 Error Article Not present !')
+        return render_template('404.html'), 404
     else:
-      return render_template('post.html', post=post)
+        app.logger.info('Article ' + post['Title'] + 'Retrived!')
+        return render_template('post.html', post=post)
 
 # Define the About Us page
 @app.route('/about')
 def about():
+    app.logger.info('About US is Retrived!')
     return render_template('about.html')
+
+
+@app.route('/healthz')
+def healthcheck():
+    response = app.response_class(
+            response=json.dumps({"result":"OK - healthy"}),
+            status=200,
+            mimetype='application/json'
+    )
+    return response
+
+@app.route('/metrics')
+def metrics():
+    response = app.response_class(
+            response=json.dumps({"status":"success","code":0,"data":{"db_connection_count":1,"post_count":fetch_number_of_posts()}}),
+            status=200,
+            mimetype='application/json'
+    )
+    app.logger.info('Metrics request successfull')
+    return response
+
 
 # Define the post creation functionality 
 @app.route('/create', methods=('GET', 'POST'))
@@ -60,11 +98,19 @@ def create():
                          (title, content))
             connection.commit()
             connection.close()
-
+            app.logger.info('New Article ' + title + ' Created!')
             return redirect(url_for('index'))
 
     return render_template('create.html')
 
 # start the application on port 3111
 if __name__ == "__main__":
-   app.run(host='0.0.0.0', port='3111')
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    # stderr_handler = logging.StreamHandler(sys.stderr)
+    logging.basicConfig(
+        level=logging.DEBUG,
+        handlers=[stdout_handler],
+        format='%(levelname)s:%(name)s:%(asctime)s - %(message)s'
+    )
+    app.run(host='0.0.0.0', port='3111')
+    # fetch_number_of_connections()
