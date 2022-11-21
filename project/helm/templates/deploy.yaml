@@ -24,12 +24,12 @@ spec:
               protocol: {{ .Values.service.protocol }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProb }}
-              port: {{ .Values.containerPort }}
+              path: {{ .Values.livenessProb.httpGet.path }}
+              port: {{ .Values.livenessProb.httpGet.port }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.readinessProbe }}
-              port: {{ .Values.containerPort }}
+              path: {{ .Values.readinessProbe.httpGet.path }}
+              port: {{ .Values.readinessProbe.httpGet.port }}
           resources:
             requests:
               memory: {{ .Values.resources.requests.memory }}

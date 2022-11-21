@@ -3,12 +3,14 @@ import sqlite3
 import sys
 from flask import Flask, jsonify, json, render_template, request, url_for, redirect, flash
 from werkzeug.exceptions import abort
-
+nConnections = 0
 # Function to get a database connection.
 # This function connects to database with the name `database.db`
 def get_db_connection():
+    global nConnections
     connection = sqlite3.connect('database.db')
     connection.row_factory = sqlite3.Row
+    nConnections = nConnections + 1
     return connection
 
 # Function to get a post using its ID
@@ -24,11 +26,11 @@ def fetch_number_of_posts():
     nPosts = connection.execute('SELECT COUNT(*) FROM posts')
     return nPosts.fetchone()[0]
 
-def fetch_number_of_connections():
-    connection = get_db_connection()
-    nConnections = connection.execute('SELECT * FROM posts')
-    print(nConnections)
-    return nConnections
+# def fetch_number_of_connections():
+#     connection = get_db_connection()
+#     nConnections = connection.execute('SELECT * FROM posts')
+#     print(nConnections)
+#     return nConnections
 
 
 # Define the Flask application
@@ -74,8 +76,9 @@ def healthcheck():
 
 @app.route('/metrics')
 def metrics():
+    global nConnections
     response = app.response_class(
-            response=json.dumps({"status":"success","code":0,"data":{"db_connection_count":1,"post_count":fetch_number_of_posts()}}),
+            response=json.dumps({"status":"success","code":0,"data":{"db_connection_count":nConnections,"post_count":fetch_number_of_posts()}}),
             status=200,
             mimetype='application/json'
     )
